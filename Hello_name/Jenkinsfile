@@ -1,0 +1,36 @@
+pipeline {
+  agent {
+    node {
+      label 'jenkins-agent'
+    }
+  }
+  
+  stages {
+    stage('Checkout') {
+      steps {
+        git branch: 'main', url: 'https://github.com/civ91/cicd-practica-carlos'
+      }
+    }
+    
+    stage('Build') {
+      steps {
+        sh 'mvn clean package'
+      }
+    }
+    
+    stage('Deploy') {
+      when {
+        branch 'main'
+      }
+      steps {
+        withCredentials([usernamePassword(credentialsId: 'docker-login', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+          sh 'docker login -u $USERNAME -p $PASSWORD'
+        }
+        
+        sh 'docker build -t my-app .'
+        sh 'docker tag my-app my-registry/my-app:latest'
+        sh 'docker push my-registry/my-app:latest'
+      }
+    }
+  }
+}

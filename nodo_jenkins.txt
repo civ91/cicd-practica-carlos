@@ -1,0 +1,19 @@
+Tipo de nodo: Contenedor Docker
+Configuración del contenedor:
+- Imagen de Docker utilizada: jenkins/inbound-agent
+- Nombre del contenedor: jenkins-agent
+- Puertos expuestos: 8080 (para el servidor de Jenkins) y 50000 (para el agente de Jenkins)
+- Volumen montado: /var/run/docker.sock:/var/run/docker.sock (para permitir que el contenedor interactúe con Docker en el host)
+
+Instrucciones para ejecutar el contenedor:
+1. Instalar Docker en el host.
+2. Ejecutar el siguiente comando en la terminal: 
+   docker run -d --name jenkins-agent -v /var/run/docker.sock:/var/run/docker.sock -p 8080:8080 -p 50000:50000 jenkins/inbound-agent
+3. El contenedor se iniciará automáticamente y se conectará al servidor de Jenkins especificado en la configuración del agente.
+
+Configuración del agente:
+- Nombre: jenkins-agent
+- Etiqueta: jenkins-agent
+- Directorio de trabajo remoto: /var/jenkins_home/workspace
+- Comando para iniciar el agente: 
+   java -jar agent.jar -jnlpUrl http://localhost:8080/computer/jenkins-agent/slave-agent.jnlp -secret [clave secreta] -workDir "/var/jenkins_home/workspace"

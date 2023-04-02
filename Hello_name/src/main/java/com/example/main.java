@@ -1,4 +1,4 @@
-package Hello_name.src.main.java.com.example;
+package com.example;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,7 +11,7 @@ public class main {
         System.out.println("Ingrese los nombres separados por comas:");
         String input = scanner.nextLine();
         
-        List<String> names = new ArrayList<>();
+        List<String> names = new ArrayList();
         for (String name : input.split(",")) {
             names.add(name.trim());
         }
