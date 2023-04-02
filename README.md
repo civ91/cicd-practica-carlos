@@ -1,7 +1,3 @@
-# Proyecto de Ejemplo para Práctica de CI/CD
-
-Este proyecto es un ejemplo para la práctica de CI/CD del Bootcamp de DevOps de KeepCoding. El objetivo de esta práctica es montar un proyecto similar a lo que se piden en una empresa a los profesionales de DevOps.
-
 ## Descripción del Proyecto
 
 El proyecto consiste en una aplicación Java simple que imprime un saludo a cada uno de los nombres de una lista y tiene algunas funciones de utilidad en la clase `StringUtils`. El proyecto está construido con Maven y tiene un conjunto de pruebas unitarias.

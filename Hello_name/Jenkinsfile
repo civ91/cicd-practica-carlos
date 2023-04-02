@@ -1,36 +1,76 @@
 pipeline {
-  agent {
-    node {
-      label 'jenkins-agent'
-    }
-  }
+    agent any
   
-  stages {
-    stage('Checkout') {
-      steps {
-        git branch: 'main', url: 'https://github.com/civ91/cicd-practica-carlos'
-      }
+    environment {
+        JENKINS_AGENT_WORKSPACE = '/home/jenkins/agent'
+        DOCKER_COMPOSE_PATH = '/usr/local/bin/docker-compose'
     }
-    
-    stage('Build') {
-      steps {
-        sh 'mvn clean package'
-      }
-    }
-    
-    stage('Deploy') {
-      when {
-        branch 'main'
-      }
-      steps {
-        withCredentials([usernamePassword(credentialsId: 'docker-login', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-          sh 'docker login -u $USERNAME -p $PASSWORD'
+
+    stages {
+        stage('build') {
+            steps {
+                sh 'echo "Building..."'
+                sh 'cd app && mvn compile'
+                sh 'echo "Build finished"'
+            }
         }
-        
-        sh 'docker build -t my-app .'
-        sh 'docker tag my-app my-registry/my-app:latest'
-        sh 'docker push my-registry/my-app:latest'
-      }
+
+        stage('test') {
+            steps {
+                echo 'Running tests...'
+                sh 'cd app && mvn test'
+                echo 'Finished tests'
+            }
+        }
+
+        stage('code analysis') {
+            steps {
+                echo 'Analyzing code...'
+                sh 'cd app && mvn checkstyle:checkstyle'
+                sh 'cd app && mvn pmd:pmd'
+                echo 'Code analysis finished'
+            }
+        }
+
+        stage('package') {
+            steps {
+                echo 'Packaging...'
+                sh 'cd app && mvn package'
+                archiveArtifacts(caseSensitive: true, artifacts: 'app/target/*.jar')
+                stash(name: 'MyJar', includes: 'app/target/*.jar')
+                echo 'Packaging finished'
+            }
+        }
+
+        stage('deploy staging') {
+            steps {
+                echo 'Deploying to staging environment...'
+                sh 'cd deploy && ${DOCKER_COMPOSE_PATH} up -d'
+                echo 'Deployment finished'
+            }
+        }
+
+        stage('smoke test') {
+            steps {
+                echo 'Running smoke tests...'
+                sh 'curl -f http://localhost:8080/ || exit 1'
+                echo 'Smoke tests finished'
+            }
+        }
+
+        stage('manual approval') {
+            steps {
+                input message: 'Ready to deploy to production?', submitterParameter: 'APPROVER'
+            }
+        }
+
+        stage('deploy production') {
+            steps {
+                echo 'Deploying to production environment...'
+                unstash 'MyJar'
+                sh 'cd deploy && ${DOCKER_COMPOSE_PATH} -f docker-compose.prod.yml up -d'
+                echo 'Deployment finished'
+            }
+        }
     }
-  }
 }
